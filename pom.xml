@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.4</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.git.hui.springai</groupId>
+	<artifactId>spring-ai-demo</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>spring-ai-demo</name>
+	<description>Spring AI , getting started example, using ZhiPu AI</description>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<modules>
+		<module>S01-chat-demo</module>
+		<module>S02-prompt-demo</module>
+		<module>S03-structured-output</module>
+		<module>S04-chat-memory</module>
+		<module>S05-self-model</module>
+        <module>S06-function-tool</module>
+        <module>S07-mcp-server</module>
+        <module>S08-mcp-server-basic-auth</module>
+        <module>S09-chat-client</module>
+        <module>S10-cost-advise</module>
+		<module>S11-image-model</module>
+        <module>S12-multimodality-model</module>
+		<module>S13-mcp-client-chat</module>
+        <module>advance-projects</module>
+        <module>app-projects</module>
+        <module>S15-openai-style-model</module>
+        <module>S16-stream-call</module>
+        <module>S17-reasoncontent</module>
+        <module>S18-dashscop-audio</module>
+        <module>S19-audio-transaction</module>
+        <module>S20-manual-tool-execute</module>
+        <module>S21-mcp-server-register</module>
+        <module>ali</module>
+        <module>spring-ai-demo-starter</module>
+    </modules>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+	<properties>
+		<java.version>17</java.version>
+		<spring-ai.version>1.1.2</spring-ai.version>
+		<langgraph4j.version>1.6.0-rc4</langgraph4j.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.git.hui.springai.ali</groupId>
+				<artifactId>spring-ai-demo-starter</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

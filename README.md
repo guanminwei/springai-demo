@@ -1,0 +1,151 @@
+# spring-ai-demo
+
+基于SpringAI的示例工程，快速体验SpringAI的能力，记录一下个人体验SpringAI进行大模型上层应用开发的学习历程，同时也给希望体验大模型应用开发的java开发者提供一些参考
+
+项目关联主站：[https://ppai.top](https://ppai.top)
+
+## 技术栈
+
+- SpringBoot 3.5.3
+- SpringAI ~~1.0.1~~  🚀升级为 -> 1.1.2
+- LangGraph4J
+- Java17
+- Maven
+
+v2 对应的目录下，存放的是基于 SpringAI 2.x 的示例工程
+
+- Java21
+- SpringBoot 4.x
+- SpringAI 2.x
+
+Spring-Ai-alibaba 相关的示例项目，放在 ali/ 目录
+
+- Java17+
+- spring-ai-alibaba-agent-framework: 1.1.2.1
+
+### 本地启动说明
+
+这个仓库中，所有的项目都是独立运行的，彼此之间无相互依赖；因此您可以任意选择一个项目，基于其Application启动类进行启动测试
+
+但是，在启动之前，请根据您实际的模型需要，替换 `resources/application.yml` 中的模型配置
+
+对于密钥，本地开发时，可以通过环境上下文、启动参数、配置文件硬编码等各种方式注入；当然您也可以将项目根目录中的 [.env.example](./.env.example) 拷贝一份名为 `.env` 的文件
+
+然后在这个配置文件中，维护上ApiKey，然后项目在启动时，会自动读取这个配置中的ApiKey，其实现主要是依赖 [spring-ai-demo-starter](./spring-ai-demo-starter) 来提供支持
+
+## 教程目录
+
+### 1.基础教程
+
+主要介绍SpringAI的基础使用，对应的项目工程以 `Sxx-` 开头，通过这些实例，您将掌握SpringAI的基础知识（如提示词、上下文、架构化输出、tool
+calling, MCP, advise, ChatClient, 多模型等），并开始使用SpringAI进行大模型应用开发
+
+- [x] [01.创建一个SpringAI-Demo工程.md](docs/01.创建一个SpringAI-Demo工程.md)
+- [x] [02.提示词的使用.md](docs/02.提示词设置.md)
+- [x] [03.结构化返回](docs/03.结构化返回.md)
+- [x] [04.聊天上下文实现多轮对话](docs/04.聊天上下文.md)
+- [x] [05.自定义大模型接入](docs/05.自定义大模型接入.md)
+- [x] [06.Function Tool工具调用](docs/06.工具调用.md)
+- [x] [07.实现一个简单的McpServer](docs/07.实现一个简单的McpServer.md)
+- [x] [08.MCP Server简单鉴权的实现](docs/08.MCP%20Server简单鉴权的实现.md)]
+- [x] [09.ChatClient使用说明](docs/09.ChatClient使用说明.md)]
+- [x] [10.Advisor实现SpringAI交互增强](docs/10.Advisor实现SpringAI交互增强.md)]
+- [x] [11.图像模型-生成图片](docs/11.图像模型.md)
+- [x] [12.多模态实现食材图片卡路里识别示例](docs/12.多模态实现食材图片卡路里识别示例.md)
+- [x] [13.支持MCP Client的AI对话实现](docs/13.支持MCP%20Client的AI对话实现.md)
+- [x] [14.创建一个LangGraph4J示例工程](docs/14.创建一个Langgraph4j示例工程.md)
+- [x] [15.接入OpenAI接口风格大模型](docs/15.接入OpenAI接口风格的大模型.md)
+- [x] [16.异步流式模型调用](docs/16.异步流式模型调用.md)
+- [x] [17.推理大模型接入与推理过程返回](docs/17.推理大模型接入与推理过程返回.md)
+- [x] [18.语音模型之语音识别](https://www.ppai.top//ai-guides/ai-dev/基础篇/18.语音模型之语音识别.html#_1-初始化)
+- [x] [19.从自动到手动控制的工具调用](https://mp.weixin.qq.com/s/TbTnpPkVPY_bTts_l8ltGQ)
+- [ ] [音频模型](docs/)
+- [ ] [检索增强生成RAG](docs/)
+
+### 2.进阶教程
+
+进阶相关将主要介绍如何更好的使用SpringAI进行大模型应用开发，对应的实例工程都放在 [advance-projects](./advance-projects) 下
+
+- [x] [01.使用MySql持久化对话历史](docs/A01.使用MySql持久化对话历史.md)
+- [x] [02.使用H2持久化对话历史](docs/A02.使用H2持久化对话历史.md)]
+- [x] [03.使用Redis持久化对话历史](docs/A03.使用Redis持久化对话历史.md)]
+- [x] [04.使用LangGraph4J实现多伦对话](docs/A04.使用Langgraph4j实现多伦对话.md)
+- [x] [05.使用LangGraph4J实现Agent路由选择](docs/A05.使用LangGraph4J实现Agent路由选择.md)
+- [x] [06.告别传统AI开发！SpringAI Agent + Skills重新定义智能应用](https://mp.weixin.qq.com/s/ujxVleNhjxzUgL-rjfFcVA)
+- [x] [07.Spring AI中的多轮对话艺术：让大模型主动提问获取明确需求](https://mp.weixin.qq.com/s/LcvmiIERs6aOIlRAKGGnFg)
+- [x] [08.深入理解 ReAct 模式：基于Spring AI从0到1实现一个ReAct Agent](https://mp.weixin.qq.com/s/mJIibMdAFSDgXZBsM3tuPw)
+
+### 3.应用教程
+
+以搭建完整可用的SpringAI应用为目的，演示SpringAI的业务边界和表现，对应项目工都放在 [app-projects](./app-projects) 下
+
+- [x] [从0到1创建一个基于天气的旅游美食推荐智能体](docs/D01.从0到1创建一个基于天气的旅游美食推荐智能体.md)
+- [x] [大模型应用开发实战：两百行实现一个自然语言地址提取智能体](https://mp.weixin.qq.com/s/96rHyp_gBUgmA2dhSbzNww)
+- [x] [再见，OCR模板！你好，发票智能体：基于SpringAI与大模型的零配置发票智能提取架构](https://mp.weixin.qq.com/s/SnXdTB6tYqAzG7HgbnTSAQ)
+- [x] [实战 | 零基础搭建知识库问答机器人：基于SpringAI+RAG的完整实现](https://mp.weixin.qq.com/s/NHqLJbos-_nrxNNmhg7IBQ)
+- [x] [我用SpringAI造了个「微信红包封面设计师」](https://mp.weixin.qq.com/s/QyuWZ4EZ32pbcWn3fVphHQ)
+- [x] [实战干货！Spring AI 集成语音识别，实现实时翻译机器人的完整指南](https://mp.weixin.qq.com/s/qF0RfLts-fuMzv-uJZnBig)
+- [x] [告别纯文本聊天：基于Spring AI，打造支持富UI的流式对话系统](https://mp.weixin.qq.com/s/U6ua-dpkVZTYT1n5JXiYDg)
+
+对应的应用示例
+
+| Agent                                                                 | 示意图                                                                | 
+|-----------------------------------------------------------------------|--------------------------------------------------------------------|
+| [RAG问答机器人](https://mp.weixin.qq.com/s/mJIibMdAFSDgXZBsM3tuPw)                                                             | ![](https://ppai.top/ai-guides/imgs/column/springai/D04-3.gif)     |
+| [微信红包封面设计Agent](https://mp.weixin.qq.com/s/QyuWZ4EZ32pbcWn3fVphHQ)    | ![](./docs/static/T03-1.gif)                                       |
+| [语音识别翻译机器人](https://mp.weixin.qq.com/s/qF0RfLts-fuMzv-uJZnBig)        | ![D06-4.gif](https://imgbed.ppai.top/file/1772442648403_D06-4.gif) |
+| [自然语言转SQL，并支持人工审批](https://mp.weixin.qq.com/s/454LmLMAVDuZfi6t-DgSqg) | ![L02-4.gif](https://imgbed.ppai.top/file/1773107080653_L02-4.gif) |
+
+### 4.源码解读
+
+以源码的视角，介绍SpringAI的核心实现，对应的项目工程以 `Yxx-` 开头
+
+### 5.LLM应用开发入门
+
+- [LLM 应用开发是什么：零基础也可以读懂的科普文(极简版)](https://mp.weixin.qq.com/s/qCn8x2XO2shA8MheYbHq0w)
+- [大模型应用开发系列教程：序-为什么你“会用 LLM”，但做不出复杂应用？](https://mp.weixin.qq.com/s/2GXBNOUq3jlysipftz8TpA)
+- [大模型应用开发系列教程：第一章 LLM到底在做什么？](https://mp.weixin.qq.com/s/v-z6EHY300ElOxdGPdzc0w)
+- [大模型应用开发系列教程：第二章 模型不是重点，参数才是你真正的控制面板](https://mp.weixin.qq.com/s/t_BuAW9i0npcaJdua3Am2Q)
+- [大模型应用开发系列教程：第三章 为什么我的Prompt表现很糟？](https://mp.weixin.qq.com/s/vzt0bGwcfnASOiBa0Kc7VQ)
+- [大模型应用开发系列教程：第四章 Prompt 的工程化结构设计](https://mp.weixin.qq.com/s/Nk-N34TLJVCTI5F4k5rGaQ)
+- [大模型应用开发系列教程：第五章 从 Prompt 到 Prompt 模板与工程治理](https://mp.weixin.qq.com/s/ZQbztqBq7_PzynG06N4-mg)
+- [大模型应用开发系列教程：第六章 上下文窗口的真实边界](https://mp.weixin.qq.com/s/nnKspRO87xbrn4-LBV3RNA)
+- [大模型应用开发系列教程：第七章 从 “堆上下文” 到 “管理上下文”](https://mp.weixin.qq.com/s/_5D2tF6CPnafj5mlmlwLNw)
+- [大模型应用开发系列教程：第八章 记忆策略的工程化选择](https://mp.weixin.qq.com/s/z5qaLtjChsvjhWNs8Nw05Q)
+
+Agent开发相关知识内容分享
+
+- [复杂任务搞不定？试试让一群 AI 分工合作——Multi-Agent 系统实战解读](https://mp.weixin.qq.com/s/pdG9C0CQVYFUleftfga3bA?token=1761013062&lang=zh_CN)
+- [当 Spring AI Alibaba 遇上 Multi-Agent：解锁智能体的团队协作模式](https://mp.weixin.qq.com/s/wrKymQhomKCf9yi-bHbmyg?token=1761013062&lang=zh_CN)
+- [Agent开发避坑 | 从“全部塞进去”到“精挑细选”：Agent开发中绕不开的工具管理难题](https://mp.weixin.qq.com/s/Cu5J6q1jj1j9Chrxzfy5fg)
+
+### 6. LangChain相关
+
+- [LangChain开发入门系列](https://liuyueyi.github.io/langchain-demo/#)
+
+### 7. SpringAI alibaba
+
+SpringAI alibaba 是一个基于 SpringAI 的开源项目，提供了 SpringAI 的集成方案. 从架构上包含如下三层：
+
+- Agent Framework，是一个以 ReactAgent 设计理念为核心的 Agent 开发框架，使开发者能够构建具备自动上下文工程和人机交互等核心能力的Agent。
+- Graph，graph 是一个低级别的工作流和多代理协调框架，能够帮助开发者实现复杂的应用程序编排，它具备丰富的预置节点和简化的图状态定义，Graph 是 Agent Framework 的底层运行时基座。
+- Augmented LLM，以 Spring AI 框架底层原子抽象为基础，为构建大型语言模型（LLM）应用提供基础抽象，例如模型（Model）、工具（Tool）、多模态组件（MCP）、消息（Message）、向量存储（Vector Store）等。
+
+[ali](./ali) 目录下，主要是基于 SpringAI alibaba 的使用示例工程，其中示例工程以 `Lxx-` 开头
+
+- [01.Spring AI Alibaba 智能体开发基础示例 | Helllo LLM Guides](https://www.ppai.top/ai-guides/ai-dev/ALiAI/L01.Spring%20AI%20Alibaba%20%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E4%BD%BF%E7%94%A8%E4%BD%93%E9%AA%8C.html)
+- [02.从自然语言到SQL，再加一道人工防线：Spring AI Alibaba 实战](https://mp.weixin.qq.com/s/454LmLMAVDuZfi6t-DgSqg)
+- [03.从零掌握 Spring AI Alibaba Skill：定义、注册与渐进式披露](https://mp.weixin.qq.com/s/TfTfQx1e661s6-cgVP8lwg)
+- [04.Spring AI Alibaba 实战：从零实现快递下单多轮对话助手](https://mp.weixin.qq.com/s/phTndkT6-FzpJw6jSo3lHQ)
+- [05.多智能体实战 | 基于 Spring AI Alibaba 从0到1实现故事创作智能体](https://mp.weixin.qq.com/s/k_3viD7wDe616hhpiWvyrQ)
+- [06.多智能体实战 | 基于 Spring AI Alibaba 实现方案策划多智能体](https://mp.weixin.qq.com/s/iKOAzyAZxm1u5ooxcmCNBA)
+
+## 关于
+
+这个项目的主要为了JAVA AI应用开发做的一些基础性示例工程，以方便帮助大家快速上手和掌握一些大模型应用开发、Agent开发的基础知识点；
+
+由于项目本身定位为示例工程，因此对于一些大模型应用开发的理论性、概念性、架构设计、框架封装实现等相关内容，可能会相对较少；
+
+如果对这块同样感兴趣的小伙伴，不妨关注下我的微信公众号：**一灰灰blog**，获取更多内容。
+
+![](https://imgbed.ppai.top/file/1770801383814_yhh-banner.png)

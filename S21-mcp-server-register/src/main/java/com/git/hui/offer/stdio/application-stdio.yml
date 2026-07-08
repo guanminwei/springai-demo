@@ -1,0 +1,31 @@
+# ============================================================
+# STDIO 模式 MCP Server 配置参考
+# ============================================================
+# 注意：此文件为 STDIO 模式的配置示例，不能与当前模块的
+# application.yml（WebMVC SSE 模式）同时生效。
+# 如需使用 STDIO 模式，请：
+#   1. 将此配置替换到 application.yml
+#   2. 将 pom.xml 中的依赖从 spring-ai-starter-mcp-server-webmvc
+#      改为 spring-ai-starter-mcp-server
+# ============================================================
+
+spring:
+  ai:
+    mcp:
+      server:
+        name: stdio-demo-server
+        version: 1.0.0
+        type: SYNC              # 同步模式（STDIO 通常使用 SYNC）
+        stdio: true             # 关键配置：启用 STDIO 传输协议
+        instructions: "STDIO 模式的 MCP Server 示例"
+        capabilities:
+          tool: true            # 启用工具能力
+          resource: false       # STDIO 模式下可按需关闭不需要的能力
+          prompt: false
+          completion: false
+
+# 注意：STDIO 模式下不需要配置 sse-endpoint 和 sse-message-endpoint
+# 因为通信通过 stdin/stdout 进行，无需 HTTP 端点
+
+# 注意：STDIO 模式下通常也不需要 server.port 配置
+# 因为不启动 Web 服务器

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================
+  STDIO 模式 MCP Server POM 依赖参考
+  ============================================================
+  注意：此文件为 STDIO 模式的依赖示例，不能与当前模块的
+  pom.xml（WebMVC SSE 模式）同时使用。
+  如需使用 STDIO 模式，请将下方依赖替换到 pom.xml 的
+  dependencies 节点中。
+  ============================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.git.hui.springai</groupId>
+        <artifactId>spring-ai-demo</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.git.hui.offer</groupId>
+    <artifactId>S21-mcp-server-stdio</artifactId>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!--
+          STDIO 模式关键区别：
+          使用 spring-ai-starter-mcp-server（不带 -webmvc 后缀）
+          而非 spring-ai-starter-mcp-server-webmvc
+
+          该依赖不包含 Web 服务器（Tomcat），
+          MCP Server 通过 stdin/stdout 与 Client 通信。
+        -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-server</artifactId>
+        </dependency>
+
+        <!--
+          注意：STDIO 模式不需要 spring-boot-starter-web，
+          因为没有 HTTP 端点。
+          如果需要在 STDIO 模式下也提供 HTTP 接口（混合模式），
+          可以同时引入 spring-boot-starter-web。
+        -->
+    </dependencies>
+</project>

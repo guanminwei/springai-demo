@@ -1,0 +1,29 @@
+spring:
+  ai:
+    zhipuai:
+      # api-key 使用你自己申请的进行替换；如果为了安全考虑，可以通过启动参数进行设置
+      api-key: ${ZHIPUAI_API_KEY:${AI_API_KEY:}}
+      chat: # 聊天模型
+        options:
+          model: GLM-4.7-Flash
+    mcp:
+      client:
+        sse:
+          connections:
+            global-date-times:
+              # 这里使用 S07-mcp-server 创建的mcp服务，用于获取当前时�?              url: http://localhost:8080/sse
+        #  使用本地的mcp server，通过进程通信，我们这里演示的是使�?selenium 来实现网页数据抓�?        stdio:
+          servers-configuration: classpath:mcp-servers.json
+        enabled: true
+        name: time-mcp
+        version: 1.0.0
+        request-timeout: 30s
+        type: async
+
+
+# 修改日志级别
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: debug
+server:
+  port: 8081

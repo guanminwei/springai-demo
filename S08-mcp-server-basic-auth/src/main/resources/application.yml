@@ -1,0 +1,39 @@
+spring:
+  ai:
+    mcp:
+      server:
+        name: date-server
+        version: 1.0.0
+        type: SYNC
+        instructions: "提供获取不同时区的当前时间，并按照北京时间进行展示"
+        sse-message-endpoint: /mcp/messages
+        sse-endpoint: /sse
+        capabilities:
+          tool: true # 是否支持工具
+          resource: true # 是否支持资源
+          prompt: true # 是否支持提示词      
+          completion: true # 是否支持补全
+
+# MCP Server 鉴权配置
+mcp:
+  auth:
+    token: yihuihui-blog  # Bearer Token 认证令牌，客户端请求头格式：Authorization: Bearer <token>
+    # 多用户模式，支持多个令牌
+    # tokens:
+    #   - token1
+    #   - token2
+    #   - token3
+    # 多用户模式，不同客户端不同的令牌
+    # tokens:
+    #   - token1: client1
+    #   - token2: client2
+    #   - token3: client3
+    # 新增一个新用户，动态生效，需要引入数据库支持，查询数据库+缓存校验用户令牌  或者 使用 Redis/json文件 存储令牌 + 定时刷新
+
+
+
+# 修改日志级别
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: debug
+    io.modelcontextprotocol.server.transport.WebMvcSseServerTransportProvider: debug
