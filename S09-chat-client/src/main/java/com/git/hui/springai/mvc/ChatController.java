@@ -54,6 +54,17 @@ public class ChatController {
     private final ChatClient poemClient;
 
     /**
+     * 聊天记忆存储器 —— 由 Spring AI 自动注入（基于 application.yml 中的配置）
+     * <p>
+     * {@link ChatMemory} 负责存储和管理对话历史，
+     * 配合 {@link MessageChatMemoryAdvisor} 可在每次请求时自动携带历史上下文，
+     * 实现多轮对话记忆能力。
+     */
+    @Autowired
+    private ChatMemory chatMemory;
+
+
+    /**
      * 构造方法：基于注入的 {@link ChatModel} 创建两个 ChatClient 实例
      * <p>
      * {@link ChatClient#builder(ChatModel)} 是创建 ChatClient 的入口，
@@ -226,15 +237,6 @@ public class ChatController {
     }
 
 
-    /**
-     * 聊天记忆存储器 —— 由 Spring AI 自动注入（基于 application.yml 中的配置）
-     * <p>
-     * {@link ChatMemory} 负责存储和管理对话历史，
-     * 配合 {@link MessageChatMemoryAdvisor} 可在每次请求时自动携带历史上下文，
-     * 实现多轮对话记忆能力。
-     */
-    @Autowired
-    private ChatMemory chatMemory;
 
     /**
      * 带聊天记忆的对话接口
