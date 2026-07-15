@@ -10,6 +10,16 @@ spring:
         options:
           model: GLM-4.7-Flash
 
+# 图像生成应用参数（类型安全，可按环境覆盖）
+app:
+  image:
+    generate:
+      width: 1024
+      height: 1024
+      model: CogView-3-Flash     # SDK bug: 必须显式指定，否则会被默认值 cogview-3 覆盖
+      style: natural              # natural | vivid
+      response-format: png
+
 # 修改日志级别
 logging:
   level:
