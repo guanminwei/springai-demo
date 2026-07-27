@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 深度思考对话</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f5f5f5; padding: 20px; padding-bottom: 90px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .input-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; gap: 10px; justify-content: center; padding: 16px 20px; background: #fff; border-top: 1px solid #e5e5e5; box-shadow: 0 -2px 8px rgba(0,0,0,.06); z-index: 100; }
+        .input-bar input { flex: 1; max-width: 640px; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; }
+        .input-bar input:focus { border-color: #4a6cf7; }
+        .input-bar button { padding: 12px 24px; background: #4a6cf7; color: #fff; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
+        .input-bar button:disabled { background: #aaa; cursor: not-allowed; }
+        .output { background: #fff; border-radius: 12px; padding: 24px; min-height: 200px; box-shadow: 0 1px 4px rgba(0,0,0,.08); white-space: pre-wrap; word-break: break-word; line-height: 1.8; }
+        /* 思考计时器样式 */
+        .thinking-timer { color: #8b5cf6; font-size: 14px; margin-bottom: 12px; display: none; }
+        .thinking-timer.active { display: block; }
+        /* 思考过程：灰色小字 */
+        .reason-section { color: #999; font-size: 13px; border-left: 3px solid #e5e5e5; padding-left: 12px; margin-bottom: 16px; }
+        .reason-section .section-title { color: #8b5cf6; font-weight: bold; margin-bottom: 4px; }
+        /* 回答：正常黑色 */
+        .answer-section { color: #333; font-size: 15px; }
+        .answer-section .section-title { font-weight: bold; margin-bottom: 4px; }
+        /* 复制按钮 */
+        .copy-bar { margin-top: 12px; display: none; }
+        .copy-bar button { padding: 6px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; cursor: pointer; color: #555; }
+        .copy-bar button:hover { background: #e8e8e8; }
+        .copy-bar button.copied { background: #e6f7ee; border-color: #52c41a; color: #52c41a; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="output" id="output">
+        <div class="thinking-timer" id="timer"></div>
+        <div class="reason-section" id="reasonSection" style="display:none">
+            <div class="section-title">💭 思考过程</div>
+            <span id="reasonText"></span>
+        </div>
+        <div class="answer-section" id="answerSection" style="display:none">
+            <div class="section-title">✅ 回答</div>
+            <span id="answerText"></span>
+            <div class="copy-bar" id="copyBar">
+                <button id="copyBtn" onclick="copyAnswer()">📋 复制回答</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="input-bar">
+    <input id="msgInput" type="text" placeholder="输入你的问题..." value=""/>
+    <button id="sendBtn" onclick="send()">发送</button>
+</div>
+
+<script>
+    let timerInterval = null;
+    let seconds = 0;
+
+    async function send() {
+        const msg = document.getElementById('msgInput').value.trim();
+        if (!msg) return;
+
+        const btn = document.getElementById('sendBtn');
+        const timerEl = document.getElementById('timer');
+        const reasonSection = document.getElementById('reasonSection');
+        const answerSection = document.getElementById('answerSection');
+        const reasonText = document.getElementById('reasonText');
+        const answerText = document.getElementById('answerText');
+
+        // 重置页面状态
+        btn.disabled = true;
+        reasonText.textContent = '';
+        answerText.textContent = '';
+        reasonSection.style.display = 'none';
+        answerSection.style.display = 'none';
+        document.getElementById('copyBar').style.display = 'none';
+
+        // 启动计时器：深度思考中... X秒
+        seconds = 0;
+        timerEl.textContent = '🧠 深度思考中... 0秒';
+        timerEl.classList.add('active');
+        timerInterval = setInterval(() => {
+            seconds++;
+            timerEl.textContent = '🧠 深度思考中... ' + seconds + '秒';
+        }, 1000);
+
+        // 当前输出目标：null=未开始, 'reason'=思考区, 'answer'=回答区
+        let currentTarget = null;
+        let buffer = ''; // 缓冲区：处理标记可能被截断在两个 chunk 之间的情况
+
+        try {
+            const resp = await fetch('/zhipuChatStream?msg=' + encodeURIComponent(msg));
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                // 收到第一个 chunk：停止计时，显示"已思考（用时 X 秒）"
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timerEl.textContent = '🧠 已思考（用时 ' + seconds + ' 秒）';
+                }
+
+                buffer += decoder.decode(value, { stream: true });
+
+                // 解析标记，切换输出区域
+                let idx;
+                while ((idx = buffer.indexOf('【')) !== -1) {
+                    const endIdx = buffer.indexOf('】', idx);
+                    if (endIdx === -1) break; // 标记不完整，等待下一个 chunk
+                    // 输出标记前的文本
+                    const before = buffer.substring(0, idx);
+                    appendText(before, currentTarget);
+                    // 解析标记
+                    const marker = buffer.substring(idx, endIdx + 1);
+                    if (marker === '【思考过程】') {
+                        currentTarget = 'reason';
+                        reasonSection.style.display = 'block';
+                    } else if (marker === '【回答】') {
+                        currentTarget = 'answer';
+                        answerSection.style.display = 'block';
+                    }
+                    buffer = buffer.substring(endIdx + 1);
+                }
+
+                // 输出缓冲区中不含标记的文本（保留可能不完整的 '【' 尾部）
+                const safeEnd = buffer.lastIndexOf('【');
+                if (safeEnd === -1) {
+                    appendText(buffer, currentTarget);
+                    buffer = '';
+                } else if (safeEnd > 0) {
+                    appendText(buffer.substring(0, safeEnd), currentTarget);
+                    buffer = buffer.substring(safeEnd);
+                }
+            }
+            // 流结束，输出剩余缓冲
+            if (buffer) appendText(buffer, currentTarget);
+        } catch (e) {
+            appendText('\n[请求失败: ' + e.message + ']', 'answer');
+            answerSection.style.display = 'block';
+        } finally {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+            timerEl.classList.remove('active');
+            btn.disabled = false;
+            // 流结束后显示复制按钮
+            if (answerText.textContent.trim()) {
+                document.getElementById('copyBar').style.display = 'block';
+            }
+        }
+    }
+
+    function appendText(text, target) {
+        if (!text) return;
+        if (target === 'reason') {
+            document.getElementById('reasonText').textContent += text;
+        } else if (target === 'answer') {
+            document.getElementById('answerText').textContent += text;
+        } else {
+            // 未遇到标记前的内容，默认放入回答区
+            const answerSection = document.getElementById('answerSection');
+            answerSection.style.display = 'block';
+            document.getElementById('answerText').textContent += text;
+        }
+        // 自动滚动到底部
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    // 复制回答内容到剪贴板
+    function copyAnswer() {
+        const text = document.getElementById('answerText').textContent;
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.textContent = '✅ 已复制!';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = ' 复制回答'; btn.classList.remove('copied'); }, 2000);
+        });
+    }
+
+    // 回车发送
+    document.getElementById('msgInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') send();
+    });
+</script>
+</body>
+</html>

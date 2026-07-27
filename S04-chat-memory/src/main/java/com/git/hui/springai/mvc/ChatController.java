@@ -402,6 +402,51 @@ public class ChatController {
                         // 将之前的消息内容以文本的方式追加到系统提示词中
                         PromptChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
+
+
+        /**
+         * 
+        在这个项目中，`defaultAdvisors` 和 `advisors` 是 `ChatClient` 中两个不同层级的 Advisor 配置方法，核心区别如下：
+
+        ## `defaultAdvisors` — 构建时注册（Builder 级别）
+
+        在 `ChatClient.builder(...).build()` 阶段调用，注册的 Advisor 成为该 ChatClient 实例的**固定拦截链**，每次调用都会执行。
+
+        ```java
+        this.chatClient = ChatClient.builder(chatModel)
+                .defaultAdvisors(new SimpleLoggerAdvisor(...), MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .build();
+        ```
+
+        - **时机**：构建时确定，不可变
+        - **作用域**：该 ChatClient 的所有请求共享
+        - **典型用途**：注册日志、记忆等通用 Advisor
+
+        ## `advisors` — 运行时动态指定（调用级别）
+
+        在每次 `.prompt()` 调用链中使用，用于**向已注册的 Advisor 传递运行时参数**，或追加额外的 Advisor。
+
+        ```java
+        sessionClient.prompt()
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, user))  // 动态传入会话ID
+                .call();
+        ```
+
+        - **时机**：每次请求时动态执行
+        - **作用域**：仅当前这一次调用
+        - **典型用途**：传递动态参数（如 `CONVERSATION_ID` 实现会话隔离），或临时追加 Advisor
+
+        ## 对比总结
+
+        | 维度 | `defaultAdvisors` | `advisors` |
+        |------|-------------------|------------|
+        | 调用位置 | `ChatClient.Builder` 构建阶段 | `.prompt()` 调用链中 |
+        | 生命周期 | 跟随 ChatClient 实例，构建后不可变 | 每次请求动态指定 |
+        | 参数 | 直接传入 Advisor 实例 | 通过 `Consumer<AdvisorSpec>` 设置参数或追加 Advisor |
+        | 典型场景 | 注册通用的日志/记忆 Advisor | 传递运行时参数（如会话ID）实现动态行为 |
+
+        简单来说：**`defaultAdvisors` 决定"有哪些 Advisor"，`advisors` 决定"这次调用怎么配置这些 Advisor"**。两者是互补关系，不是替代关系。
+        */
     }
 
     /**

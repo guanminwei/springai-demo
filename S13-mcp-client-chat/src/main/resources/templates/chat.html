@@ -1,9 +1,28 @@
-<!-- Thymeleaf -->
+<!--
+    chat.html - 聊天消息片段模板
+    ============================================================
+    功能：定义 Thymeleaf 片段 chatFragment，用于渲染单条对话消息（用户问题 + AI 回答）。
+    调用方式：由 ChatController.chat() 方法返回，通过 HTMX 局部刷新插入到 index.html 的 #chat 容器中。
+    渲染数据：
+      - ${question}：用户输入的问题文本
+      - ${response}：AI 模型返回的回答文本
+-->
+<!-- Thymeleaf 命名空间声明 -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
+<!--
+    Thymeleaf 片段定义：chatFragment
+    - th:fragment="chatFragment"：定义片段名称，后端通过 "chat :: chatFragment" 引用
+    - class="mb-8"：每条消息底部留 8 单位间距，与下一条消息分隔
+    - 该片段包含两部分：
+      1. 用户消息：右对齐的蓝色气泡
+      2. AI 回答：左对齐的普通段落文本
+-->
 <div th:fragment="chatFragment" class="mb-8">
+    <!-- 用户消息气泡：蓝色背景，圆角，右对齐（ml-auto），显示用户输入的问题 -->
     <div class="inline-block bg-blue-300 rounded-lg p-2 ml-auto" th:text="${question}">Message</div>
+    <!-- AI 回答文本：左对齐，顶部留距，显示大模型返回的回答内容 -->
     <p class="mt-4 h-full overflow-auto" th:text="${response}">Response</p>
 </div>
 </body>

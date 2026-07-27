@@ -1,29 +1,78 @@
+# ============================================================
+# S13-mcp-client-chat 模块配置文件
+# ============================================================
+# 本模块作为 MCP Client，连接外部 MCP Server 并将工具注册到大模型。
+# 配置包含两部分 MCP Server 连接：
+#   1. SSE 模式：连接远程 MCP Server（S07-mcp-server 时区查询服务）
+#   2. STDIO 模式：启动本地进程通信的 MCP Server（Selenium 网页抓取工具）
+# ============================================================
+
 spring:
   ai:
+    # --------------------------------------------------------
+    # 智谱 AI 大模型配置
+    # --------------------------------------------------------
     zhipuai:
-      # api-key 使用你自己申请的进行替换；如果为了安全考虑，可以通过启动参数进行设置
+      # API 密钥配置：优先读取 ZHIPUAI_API_KEY 环境变量，
+      # 若不存在则回退到 AI_API_KEY 环境变量（多服务商统一管理）
+      # 使用你自己申请的密钥替换，或通过启动参数 --spring.ai.zhipuai.api-key=xxx 注入
       api-key: ${ZHIPUAI_API_KEY:${AI_API_KEY:}}
-      chat: # 聊天模型
+      chat: # 聊天模型配置
         options:
+          # 使用 GLM-4.7-Flash 模型，具备 Function Calling 能力，可调用 MCP 工具
           model: GLM-4.7-Flash
+
+    # --------------------------------------------------------
+    # MCP Client 配置
+    # --------------------------------------------------------
+    # spring-ai-starter-mcp-client 会根据以下配置自动创建 MCP 客户端连接，
+    # 并将 MCP Server 暴露的工具注册为 ToolCallbackProvider 中的工具回调。
     mcp:
       client:
+        # ---- SSE 模式连接配置 ----
+        # 通过 HTTP SSE（Server-Sent Events）连接远程 MCP Server
+        # 适用于已独立部署、通过网络暴露的 MCP 服务
         sse:
           connections:
+            # 连接名称（自定义标识），可配置多个 SSE 连接
             global-date-times:
-              # 这里使用 S07-mcp-server 创建的mcp服务，用于获取当前时�?              url: http://localhost:8080/sse
-        #  使用本地的mcp server，通过进程通信，我们这里演示的是使�?selenium 来实现网页数据抓�?        stdio:
+              # MCP Server 的 SSE 端点地址
+              # 这里连接 S07-mcp-server 模块提供的时区查询服务
+              # 前置条件：S07-mcp-server 必须已启动并监听在 8080 端口
+              url: http://localhost:8080/sse
+
+        # ---- STDIO 模式连接配置 ----
+        # 通过本地进程的标准输入/输出（stdin/stdout）与 MCP Server 通信
+        # 适用于本地工具，MCP Client 会自动启动配置的进程
+        stdio:
+          # 指向 MCP Server 配置文件的路径（classpath 下）
+          # 配置文件定义了要启动的本地 MCP Server 进程信息
           servers-configuration: classpath:mcp-servers.json
+
+        # 是否启用 MCP Client（设为 false 可禁用所有 MCP 连接）
         enabled: true
+        # MCP Client 实例名称，用于标识当前客户端
         name: time-mcp
+        # MCP Client 版本号
         version: 1.0.0
+        # MCP 工具调用超时时间，超过此时间未返回结果则抛出异常
         request-timeout: 30s
+        # 客户端类型：async（异步）使用 McpAsyncClient，支持 Reactor 响应式编程
+        # 另一选项为 sync（同步），使用 McpSyncClient
         type: async
 
 
-# 修改日志级别
+# --------------------------------------------------------
+# 日志配置
+# --------------------------------------------------------
 logging:
   level:
+    # 将 SimpleLoggerAdvisor 的日志级别设为 DEBUG
+    # SimpleLoggerAdvisor 会以 DEBUG 级别打印 ChatClient 的请求/响应详情
+    # 便于开发调试时查看发送给大模型的完整 Prompt 和返回结果
     org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: debug
+
+# 服务端口配置
+# 使用 8081 避免与 S07-mcp-server（8080）端口冲突
 server:
   port: 8081

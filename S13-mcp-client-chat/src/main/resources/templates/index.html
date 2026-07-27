@@ -1,23 +1,43 @@
-<!-- Thymeleaf -->
+<!--
+    index.html - MCP Client Chat 主页面
+    ============================================================
+    功能：提供基于 HTMX 的无刷新聊天界面，用户输入消息后通过 AJAX 发送到后端，
+         后端调用 ChatClient（含 MCP 工具）处理后将结果局部刷新到页面。
+    技术栈：
+      - Thymeleaf：服务端模板引擎
+      - HTMX：无需编写 JavaScript 即可实现 AJAX 局部刷新
+      - Tailwind CSS：通过 CDN 引入的原子化 CSS 框架，用于快速构建美观 UI
+-->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>支持MCP Client的聊天对话框</title>
+    <!-- 引入 HTMX 库：提供 hx-post/hx-swap/hx-target 等属性实现无刷新交互 -->
     <script src="https://unpkg.com/htmx.org@1.9.12"
             integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2"
             crossorigin="anonymous"></script>
+    <!-- 引入 Tailwind CSS（CDN 方式），用于快速构建响应式 UI -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        /**
+         * 消息发送后自动滚动到聊天区域底部，并清空输入框。
+         * 由 HTMX 的 htmx:afterRequest 事件触发调用。
+         * @param element - 聊天消息容器 DOM 元素（#chat）
+         */
         function scrollToBottom(element) {
             document.getElementById('message').value = ''
             element.scrollTop = element.scrollHeight;
         }
     </script>
 </head>
+<!-- 页面主体：全屏高度，渐变背景（从靛蓝色到紫色） -->
 <body class="h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
+<!-- 布局容器：Flex 布局，最大宽度限制，水平居中 -->
 <div class="flex h-full max-w-6xl mx-auto">
 
+    <!-- 主内容区：Flex 纵向布局，包含标题栏、聊天区域、输入框 -->
     <main class="flex flex-col p-4 w-full">
+        <!-- 页面头部：标题和描述 -->
         <header class="mb-6 py-4 border-b border-gray-200">
             <h1 class="text-3xl font-bold leading-none tracking-tight text-indigo-800">
                 🤖 MCP Client Chat
@@ -25,11 +45,25 @@
             <p class="text-gray-600 mt-1">与AI助手进行智能对话</p>
         </header>
 
+        <!--
+            聊天消息展示区域
+            - id="chat"：HTMX 的目标容器，新消息会追加到此容器末尾
+            - overflow-auto：内容超出时显示滚动条
+        -->
         <div id="chat" class="flex-1 mb-4 p-4 rounded-2xl bg-white shadow-sm overflow-auto">
-            <!-- 消息将在这里显示 -->
+            <!-- 消息将在这里显示，由 HTMX 动态插入 chatFragment 片段 -->
         </div>
 
+        <!-- 底部输入区域：包含消息输入框和发送按钮 -->
         <div class="bg-white rounded-2xl shadow-lg p-4">
+            <!--
+                消息提交表单（HTMX 驱动）
+                - hx-post="/ask"：表单提交时发送 POST 请求到 /ask 接口
+                - hx-swap="beforeend"：将服务器返回的 HTML 追加到 #chat 容器末尾
+                - hx-target="#chat"：指定响应内容的插入目标为 #chat 元素
+                - hx-indicator="#loading-indicator"：请求期间显示加载动画
+                - hx-on：HTMX 事件钩子，用于禁用/启用输入框和自动滚动
+            -->
             <form
                     class="w-full"
                     hx-post="/ask"
@@ -46,10 +80,17 @@
                     document.getElementById('submit-btn').disabled = false;
                     document.getElementById('submit-btn').classList.remove('opacity-50', 'cursor-not-allowed');
                     scrollToBottom(document.getElementById('chat'));">
+                <!-- 输入框和按钮容器：圆角灰色背景 -->
                 <div class="flex items-center rounded-full bg-gray-100 p-2 shadow-inner">
+                    <!-- 消息输入框：透明背景，无边框，占满剩余宽度 -->
                     <input type="text" name="message" id="message"
                            class="bg-transparent outline-none text-gray-700 rounded-full py-3 px-4 w-full"
                            placeholder="输入消息..."/>
+                    <!--
+                        发送按钮
+                        - 内部包含加载动画（默认隐藏，请求时通过 htmx-indicator 类显示）
+                        - 加载动画为 CSS 旋转的圆形边框
+                    -->
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full p-3 ml-2 transition duration-200 relative">📤
                         <span id="loading-indicator" class="htmx-indicator absolute inset-0 flex items-center justify-center"><span class="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></span></span>
                     </button>
@@ -58,6 +99,12 @@
         </div>
     </main>
 </div>
+<!--
+    自定义 CSS 样式
+    - 定义旋转动画（用于加载指示器）
+    - 控制 htmx-indicator 的显示/隐藏逻辑：
+      默认隐藏，当父元素有 htmx-request 类时显示
+-->
 <style>
     @keyframes spin {
         0% {
@@ -72,10 +119,12 @@
         animation: spin 1s linear infinite;
     }
 
+    /* HTMX 加载指示器：默认隐藏 */
     .htmx-indicator {
         display: none;
     }
 
+    /* 当 HTMX 请求进行中时，显示加载指示器 */
     .htmx-request .htmx-indicator {
         display: flex;
     }
