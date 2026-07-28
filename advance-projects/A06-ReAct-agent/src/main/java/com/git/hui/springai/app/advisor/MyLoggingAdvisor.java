@@ -18,8 +18,35 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 自定义日志 Advisor - 用于观测 ReAct Agent 的请求/响应过程
+ * <p>
+ * 本类实现了 Spring AI 的 {@link BaseAdvisor} 接口，在 LLM 调用前后拦截请求和响应，
+ * 记录详细的调试信息，包括：
+ * <ul>
+ *     <li>before() - 请求拦截：记录系统提示词、可用工具列表、用户输入、工具响应</li>
+ *     <li>after() - 响应拦截：记录模型的工具调用（Tool-Call）和文本回复</li>
+ * </ul>
+ * <p>
+ * 设计特点：
+ * <ul>
+ *     <li>采用 Builder 模式，支持链式配置 order、showSystemMessage、showAvailableTools</li>
+ *     <li>支持通过 order 控制在 Advisor 链中的执行顺序</li>
+ *     <li>日志级别为 DEBUG，避免生产环境输出过多信息</li>
+ *     <li>对超长文本自动截断（通过 first() 方法），防止日志过大</li>
+ * </ul>
+ * <p>
+ * 在 ReAct 循环中的观测价值：
+ * <ul>
+ *     <li>观察每轮 Thinking 阶段模型是否决定调用工具</li>
+ *     <li>观察工具调用参数和返回结果</li>
+ *     <li>追踪多轮循环的完整执行链路</li>
+ * </ul>
+ *
  * @author YiHui
  * @date 2026/1/26
+ * @see BaseAdvisor
+ * @see ChatClientRequest
+ * @see ChatClientResponse
  */
 public class MyLoggingAdvisor implements BaseAdvisor {
     private static final Logger log = LoggerFactory.getLogger(MyLoggingAdvisor.class);
