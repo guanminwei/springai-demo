@@ -15,15 +15,38 @@ import java.util.Map;
 import java.util.Random;
 
 /**
+ * 知识问答工具类 —— 作为 Spring AI Function Calling 的工具提供方，向大模型暴露"出题"能力。
+ *
+ * <p>本类通过 {@code @Tool} 注解将 {@link #createQuiz} 方法注册为可被大模型调用的工具。
+ * 当用户提出"出一道关于 XX 的选择题"等请求时，大模型会识别并调用此工具，
+ * 由本类返回结构化的 {@link QuizCard} 数据（包含题目、选项、答案、解析等）。</p>
+ *
+ * <p>设计要点：</p>
+ * <ul>
+ *   <li>使用 {@code @ToolResponseType("quiz")} 自定义注解声明返回类型，
+ *       在手动执行模式下可通过反射读取此元数据，用于前端渲染路由</li>
+ *   <li>内部维护一个基于主题关键词的题库（{@link #initQuizBank()}），
+ *       支持 default / spring / ai 三个主题，未匹配时回退到默认题目</li>
+ *   <li>被注释的 fetchWeather 方法演示了"同名工具冲突"问题：
+ *       若两个工具类注册了同名工具（如 queryWeather），Spring AI 会抛出
+ *       {@code IllegalStateException: Multiple tools with the same name}</li>
+ * </ul>
  *
  * @author YiHui
  * @date 2026/3/6
+ * @see QuizCard
+ * @see ToolResponseType
  */
 @Slf4j
 @Component
 public class QuizTools {
 
-//    同名的工具，在调用时会报错 -- java.lang.IllegalStateException: Multiple tools with the same name (queryWeather) found in ToolCallingChatOptions
+//    ========== 【反例演示】同名工具冲突 ==========
+//    以下方法被注释，用于说明：若 QuizTools 和 WeatherTools 同时注册名为 "queryWeather" 的工具，
+//    Spring AI 在执行时会抛出：
+//    java.lang.IllegalStateException: Multiple tools with the same name (queryWeather) found in ToolCallingChatOptions
+//    因此在多工具类协作时，必须确保工具名称全局唯一。
+//
 //    @Tool(name = "queryWeather", description = "查询指定国家的天气信息，返回详细的天气状况、温度、湿度等数据")
 //    @ToolResponseType("card")  // 声明返回类型为 card
 //    public WeatherCard fetchWeather(
@@ -70,21 +93,35 @@ public class QuizTools {
 //    }
 
     /**
-     * 知识问答
+     * 创建知识问答题目 —— 根据指定主题从题库中检索并返回结构化的选择题数据。
      *
-     * @param topic 主题
-     * @return 问答题卡片
+     * <p>本方法通过 {@code @Tool} 注解暴露给大模型，大模型根据用户意图决定是否调用。
+     * 返回的 {@link QuizCard} 包含完整的题目信息（题干、选项、正确答案、解析、难度），
+     * 前端可据此渲染交互式答题组件。</p>
+     *
+     * <p>执行流程：</p>
+     * <ol>
+     *   <li>初始化题库（基于主题关键词索引）</li>
+     *   <li>将传入的 topic 转小写后匹配题库，未命中则回退到 "default" 题目</li>
+     *   <li>将内部 {@link QuizData} 转换为对外的 {@link QuizCard} DTO 返回</li>
+     * </ol>
+     *
+     * @param topic 问题主题关键词（如 "spring"、"ai"、"地理"），由大模型从用户输入中提取
+     * @return 结构化的问答题卡片，包含题目、选项、答案及解析
      */
     @Tool(description = "创建知识问答题目，支持多个主题领域，返回问题和候选项")
-    @ToolResponseType("quiz")  // 声明返回类型为 quiz
+    @ToolResponseType("quiz")  // 声明返回类型为 quiz，手动模式下可通过反射读取
     public QuizCard createQuiz(@ToolParam(description = "问题主题，如 spring、ai、地理等") String topic) {
         log.info("[inner-tool] 创建知识问答：{}", topic);
 
-        // TODO: 实际场景中应该根据主题动态生成题目
-        // 这里使用预设的示例题目
+        // 初始化题库：key 为主题关键词，value 为题目数据
+        // TODO: 实际场景中应该根据主题调用 AI 动态生成题目或查询数据库
         Map<String, QuizData> quizBank = initQuizBank();
+
+        // 主题匹配：转小写后查找，未命中则使用默认题目（容错设计）
         QuizData quizData = quizBank.getOrDefault(topic.toLowerCase(), quizBank.get("default"));
 
+        // 将内部数据结构转换为对外 DTO，保持接口契约稳定
         return QuizCard.builder()
                 .question(quizData.question)
                 .description(quizData.description)
@@ -95,6 +132,18 @@ public class QuizTools {
                 .build();
     }
 
+    /**
+     * 初始化题库 —— 构建基于主题关键词索引的预设题目集合。
+     *
+     * <p>当前支持三个主题：</p>
+     * <ul>
+     *   <li>{@code default} - 基础地理题（中国首都）</li>
+     *   <li>{@code spring} - Spring AI 框架知识</li>
+     *   <li>{@code ai} - AI 基础概念</li>
+     * </ul>
+     *
+     * @return 主题 → 题目数据 的映射表
+     */
     private Map<String, QuizData> initQuizBank() {
         Map<String, QuizData> quizBank = new HashMap<>();
 
@@ -146,14 +195,26 @@ public class QuizTools {
         return quizBank;
     }
 
+    /**
+     * 题库内部数据模型 —— 用于在题库 Map 中存储单道题目的完整信息。
+     *
+     * <p>与对外的 {@link QuizCard} DTO 不同，本类仅作为内部数据载体，
+     * 通过 Lombok 的 {@code @Data} + {@code @Builder} 简化样板代码。</p>
+     */
     @lombok.Data
     @lombok.Builder
     static class QuizData {
+        /** 题干文本 */
         String question;
+        /** 题目描述/补充说明 */
         String description;
+        /** 候选项列表（A/B/C/D） */
         List<QuizCard.Option> options;
+        /** 正确答案对应的选项 key（如 "B"） */
         String correctAnswer;
+        /** 答案解析 */
         String explanation;
+        /** 难度等级（EASY / MEDIUM / HARD） */
         QuizCard.Difficulty difficulty;
     }
 }

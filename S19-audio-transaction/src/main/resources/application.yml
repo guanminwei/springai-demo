@@ -1,22 +1,46 @@
+# Spring 配置
 spring:
+  # Thymeleaf 模板引擎配置
   thymeleaf:
+    # 关闭缓存，开发环境下可实时看到模板修改效果
     cache: false
+  # Spring AI 配置
   ai:
     openai:
-      # api-key 使用你自己申请的进行替换；如果为了安全考虑，可以通过启动参数进行设置
+      # OpenAI 兼容 API 的密钥
+      # 支持多来源获取：优先使用环境变量 SILICON_API_KEY，其次使用 AI_API_KEY
+      # 生产环境建议通过启动参数 -Dspring.ai.openai.api-key=xxx 或环境变量注入，避免硬编码
       api-key: ${SILICON_API_KEY:${AI_API_KEY:}}
-      transcription:
-        api-key: ${SILICON_API_KEY:${AI_API_KEY:}}
-        base-url: https://api.siliconflow.cn/v1
+      # 语音转写（Transcription）模型配置
+      # 注意：Spring AI 1.1.x 的属性前缀为 spring.ai.openai.audio.transcription
+      audio:
+        transcription:
+          # 语音转写专用的 API Key（可与主 API Key 相同，也可单独配置）
+          api-key: ${SILICON_API_KEY:${AI_API_KEY:}}
+          # SiliconFlow 平台的 API 地址（兼容 OpenAI 接口风格）
+          # 注意：不能带 /v1 后缀，Spring AI 内部会自动拼接 /v1/audio/transcriptions
+          base-url: https://api.siliconflow.cn
+          # 语音转写的默认选项
+          options:
+            # 默认使用的语音识别模型：FunAudioLLM/SenseVoiceSmall
+            # 这是一个支持多语言的小型语音识别模型，具有较高的识别准确率
+            model: FunAudioLLM/SenseVoiceSmall
+            # 响应格式：text 表示返回纯文本结果（也可设置为 json 返回结构化数据）
+            response-format: text
+      # 聊天模型配置（本模块主要用于演示语音转写，聊天模型为可选配置）
+      chat:
         options:
-          model: FunAudioLLM/SenseVoiceSmall
-          response-format: text
-      chat: # 聊天模型
-        options:
+          # 使用 DeepSeek 的推理模型（基于 Qwen3-8B 微调）
           model: deepseek-ai/DeepSeek-R1-0528-Qwen3-8B
+      # SiliconFlow 平台的基础 API 地址（不含 /v1 后缀）
       base-url: https://api.siliconflow.cn
 
-# 修改日志级别
+# 日志配置
 logging:
   level:
+    # 将 Spring AI 的 SimpleLoggerAdvisor 日志级别设置为 debug
+    # 这样可以详细查看 AI 交互的请求和响应信息，便于调试和排查问题
     org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: debug
+    org.springframework.web.client.RestTemplate: DEBUG
+    org.springframework.ai.openai.api: DEBUG
+    org.springframework.web.client.DefaultRestClient: DEBUG

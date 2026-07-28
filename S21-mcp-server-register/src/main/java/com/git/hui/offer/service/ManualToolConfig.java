@@ -6,6 +6,7 @@ import io.modelcontextprotocol.spec.McpSchema;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,33 +72,39 @@ public class ManualToolConfig {
     public McpServerFeatures.SyncToolSpecification weatherManualTool(McpSyncServer mcpSyncServer) {
 
         // 第一步：定义输入参数的 JSON Schema
-        // 使用 Map 构建符合 JSON Schema 规范的结构，描述工具需要的参数
-        Map<String, Object> inputSchema = Map.of(
-                "type", "object",
-                "properties", Map.of(
+        // 使用 McpSchema.JsonSchema 构建符合 JSON Schema 规范的结构，描述工具需要的参数
+        McpSchema.JsonSchema inputSchema = new McpSchema.JsonSchema(
+                "object",                                          // type
+                Map.of(
                         "city", Map.of(
                                 "type", "string",
                                 "description", "需要查询天气的城市名称，如 北京、上海、Tokyo"
                         )
-                ),
-                "required", new String[]{"city"}
+                ),                                                 // properties
+                List.of("city"),                                   // required
+                null,                                              // additionalProperties
+                null,                                              // $defs
+                null                                               // definitions
         );
 
         // 第二步：创建 Tool 定义对象，包含工具名称、描述和输入参数 Schema
         McpSchema.Tool toolDefinition = new McpSchema.Tool(
                 "manual_weather_query",           // 工具名称（MCP Client 通过此名称调用）
+                null,                             // title（可选的人类可读标题）
                 "根据城市名称查询该城市的当前天气信息（手动注册方式）",  // 工具描述，AI 模型据此判断何时调用
-                inputSchema                         // 输入参数的 JSON Schema
+                inputSchema,                      // 输入参数的 JSON Schema
+                null,                             // outputSchema
+                null,                             // annotations
+                null                              // _meta
         );
 
         // 第三步：创建工具执行逻辑（BiFunction 处理器）
-        // 入参：McpSyncServerExchange（服务器交换上下文）+ CallToolRequest（工具调用请求）
+        // 入参：McpSyncServerExchange（服务器交换上下文）+ Map<String,Object>（工具调用参数）
         // 出参：CallToolResult（工具调用结果）
         McpServerFeatures.SyncToolSpecification toolSpec = new McpServerFeatures.SyncToolSpecification(
                 toolDefinition,
-                (exchange, request) -> {
-                    // 从请求参数中提取城市名称
-                    Map<String, Object> args = request.arguments();
+                (exchange, args) -> {
+                    // 从参数 Map 中提取城市名称
                     String city = (String) args.getOrDefault("city", "未知城市");
 
                     System.out.println("[ManualTool] 查询天气: " + city);
@@ -106,8 +113,9 @@ public class ManualToolConfig {
                     String weatherResult = city + "：晴，25°C，湿度 60%，东南风3级";
 
                     // 将结果封装为 MCP 协议的文本响应
+                    // 使用 CallToolResult(String, Boolean) 便捷构造器，内部自动包装为 TextContent
                     return new McpSchema.CallToolResult(
-                            new McpSchema.TextContent(weatherResult),
+                            weatherResult,
                             false  // isError=false，表示执行成功
                     );
                 }

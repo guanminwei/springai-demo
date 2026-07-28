@@ -1,7 +1,7 @@
 package com.git.hui.offer.service;
 
-import io.modelcontextprotocol.server.annotation.McpTool;
-import io.modelcontextprotocol.server.annotation.McpToolParam;
+import org.springaicommunity.mcp.annotation.McpTool;
+import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springframework.stereotype.Component;
 
 /**
