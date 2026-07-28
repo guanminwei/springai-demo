@@ -16,10 +16,29 @@ import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * message序列化
+ * Spring AI Message 自定义反序列化器
+ * <p>
+ * 由于 {@link Message} 是接口类型，Jackson 默认无法直接反序列化。本类通过解析 JSON 中的
+ * {@code messageType} 字段判断消息类型，并创建对应的 Message 实现类实例。
+ * <p>
+ * 反序列化策略：
+ * <ul>
+ *     <li>纯文本节点 → 默认创建 UserMessage</li>
+ *     <li>对象节点 → 根据 messageType 字段（USER/SYSTEM/ASSISTANT）创建对应消息</li>
+ *     <li>未知类型或缺失类型 → 降级为 UserMessage 并记录警告日志</li>
+ * </ul>
+ * <p>
+ * 注意事项：
+ * <ul>
+ *     <li>当前实现将所有类型统一映射为 UserMessage（简化演示）</li>
+ *     <li>生产环境建议根据 messageType 分别创建 UserMessage、SystemMessage、AssistantMessage</li>
+ *     <li>消息内容从 JSON 的 {@code text} 字段提取，若不存在则使用整个节点的 toString</li>
+ * </ul>
  *
  * @author YiHui
  * @date 2025/8/7
+ * @see Message
+ * @see JsonUtil
  */
 public class MessageDeserializer extends JsonDeserializer<Message> {
     private static final Logger logger = LoggerFactory.getLogger(MessageDeserializer.class);

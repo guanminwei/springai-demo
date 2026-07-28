@@ -14,13 +14,35 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 使用redis来存储用户聊天上下文
+ * Redis 对话记忆仓库 - 自定义实现 ChatMemoryRepository 接口
  * <p>
- * 方案一：定义list的数据结构，key 为 conversationId, value 为消息信息
- * 方案二：定义hash的数据结构，field 为 conversationId, value 为列表
+ * 本类实现了 Spring AI 的 {@link ChatMemoryRepository} 接口，使用 Redis 作为对话历史的存储后端。
+ * 适用于需要高性能读写、分布式共享对话状态的生产场景。
+ * <p>
+ * Redis 数据结构设计：
+ * <ul>
+ *     <li>Key 格式：{@code chat:{conversationId}}（如 {@code chat:user001}）</li>
+ *     <li>Value 类型：Redis List，每个元素为一条消息的 JSON 字符串</li>
+ *     <li>更新策略：覆盖式更新（先删除旧数据，再写入全量新数据）</li>
+ * </ul>
+ * <p>
+ * 可选方案对比：
+ * <ul>
+ *     <li>方案一（本实现）：List 结构，key = conversationId, value = 消息 JSON 列表</li>
+ *     <li>方案二：Hash 结构，field = conversationId, value = 序列化列表（适合需要部分更新的场景）</li>
+ * </ul>
+ * <p>
+ * 序列化说明：
+ * <ul>
+ *     <li>消息序列化/反序列化通过 {@link com.git.hui.springai.advance.util.JsonUtil} 完成</li>
+ *     <li>Message 为接口类型，反序列化时需要自定义 {@link com.git.hui.springai.advance.util.MessageDeserializer}</li>
+ * </ul>
  *
  * @author YiHui
  * @date 2025/8/7
+ * @see ChatMemoryRepository
+ * @see com.git.hui.springai.advance.util.JsonUtil
+ * @see com.git.hui.springai.advance.util.MessageDeserializer
  */
 @Component
 public class RedisChatMemoryRepository implements ChatMemoryRepository {

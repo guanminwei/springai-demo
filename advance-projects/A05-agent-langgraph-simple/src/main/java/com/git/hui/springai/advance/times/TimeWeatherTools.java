@@ -9,10 +9,30 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * 根据时区，返回时间的工具
+ * 时间与天气查询工具类 - 供 Agent 调用的 Function Calling 工具
+ * <p>
+ * 本类定义了两个可供大模型自动调用的工具方法：
+ * <ul>
+ *     <li>{@link #getTimeByZoneId(ZoneId)} - 根据时区查询当前时间</li>
+ *     <li>{@link #getWeatherByZoneId(String)} - 根据地区查询当前天气（模拟数据）</li>
+ * </ul>
+ * <p>
+ * 使用方式：
+ * <ul>
+ *     <li>通过 {@code ChatClient.builder().defaultTools(new TimeWeatherTools())} 注册</li>
+ *     <li>通过 {@code AgentExecutor.builder().toolsFromObject(new TimeWeatherTools())} 注册</li>
+ * </ul>
+ * <p>
+ * 注意事项：
+ * <ul>
+ *     <li>天气查询为模拟实现（随机返回），生产环境应替换为真实天气 API</li>
+ *     <li>@Tool 和 @ToolParam 注解的 description 是大模型理解工具用途的关键</li>
+ * </ul>
  *
  * @author YiHui
  * @date 2025/8/8
+ * @see Tool
+ * @see ToolParam
  */
 public class TimeWeatherTools {
     @Tool(description = "传入时区，返回对应时区的当前时间给用户")

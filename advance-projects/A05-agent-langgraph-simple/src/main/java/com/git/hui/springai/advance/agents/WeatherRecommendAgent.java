@@ -18,6 +18,41 @@ import java.util.concurrent.CompletableFuture;
 import static org.bsc.langgraph4j.StateGraph.END;
 import static org.bsc.langgraph4j.StateGraph.START;
 
+/**
+ * 旅游推荐 Agent - 基于 Langgraph4j StateGraph 的条件路由工作流
+ * <p>
+ * 本类演示如何使用 Langgraph4j 构建一个包含条件分支的自定义 Agent 工作流。
+ * 根据用户所在地点的天气情况，智能推荐户外或室内旅游项目。
+ * <p>
+ * 工作流拓扑：
+ * <pre>
+ * START → weather（获取天气）→ router（路由节点）→ [条件分支]
+ *                                                    ├─ 晴天 → outdoor（户外推荐）→ END
+ *                                                    ├─ 雨天 → indoor（室内推荐）→ END
+ *                                                    └─ 其他 → END（直接结束）
+ * </pre>
+ * <p>
+ * 节点说明：
+ * <ul>
+ *     <li>weather - 天气获取节点：根据地点查询天气（示例使用规则模拟，生产可替换为真实 API）</li>
+ *     <li>router - 路由节点：不修改状态，仅用于触发条件边判断</li>
+ *     <li>outdoor - 户外推荐节点：调用大模型生成户外游玩推荐</li>
+ *     <li>indoor - 室内推荐节点：调用大模型生成室内游玩推荐</li>
+ * </ul>
+ * <p>
+ * 状态（State）流转：
+ * <ul>
+ *     <li>location: 用户输入的地区</li>
+ *     <li>weather: 查询到的天气结果</li>
+ *     <li>outdoor_recommendations / indoor_recommendations: 大模型生成的推荐内容</li>
+ * </ul>
+ *
+ * @author YiHui
+ * @date 2025/8/8
+ * @see StateGraph
+ * @see AgentState
+ * @see RouteEvaluationResult
+ */
 // 内部类：构建并执行 StateGraph 的服务
 public class WeatherRecommendAgent {
     private final ChatClient chatClient;
