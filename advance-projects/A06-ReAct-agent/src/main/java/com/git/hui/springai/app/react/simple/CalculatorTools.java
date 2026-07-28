@@ -10,7 +10,29 @@ import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import java.util.List;
 
 /**
- * 简单计算器工具 - 用于演示 ReAct
+ * 计算器与天气查询工具 - 供 ReAct Agent 调用的 Function Calling 工具集
+ * <p>
+ * 本类定义了 ReAct Agent 可使用的工具方法，包括基础四则运算和模拟天气查询。
+ * 大模型在 ReAct 循环的 Thinking 阶段会根据问题自动决定调用哪些工具。
+ * <p>
+ * 工具列表：
+ * <ul>
+ *     <li>{@link #add(double, double)} - 加法运算</li>
+ *     <li>{@link #subtract(double, double)} - 减法运算</li>
+ *     <li>{@link #multiply(double, double)} - 乘法运算</li>
+ *     <li>{@link #divide(double, double)} - 除法运算（含除零校验）</li>
+ *     <li>{@link #weather(String)} - 天气查询（模拟数据）</li>
+ * </ul>
+ * <p>
+ * 使用方式：
+ * <pre>
+ * CalculatorTools tools = new CalculatorTools();
+ * List&lt;ToolCallback&gt; callbacks = tools.getTools();
+ * // 将 callbacks 传给 SimpleReActAgent 或 StreamReActAgent
+ * </pre>
+ *
+ * @see SimpleReActAgent
+ * @see StreamReActAgent
  */
 public class CalculatorTools {
     private static final Logger log = LoggerFactory.getLogger(CalculatorTools.class);
@@ -59,6 +81,15 @@ public class CalculatorTools {
     }
 
 
+    /**
+     * 天气查询 - 返回指定城市的模拟天气和温度信息
+     * <p>
+     * 注意：本方法为模拟实现，随机返回天气和温度。
+     * 生产环境应替换为真实天气 API 调用。
+     *
+     * @param city 城市名称
+     * @return 格式化的天气信息字符串
+     */
     @Tool(description = "查询天气信息")
     public String weather(@ToolParam(description = "城市名称") String city) {
         log.debug("[🔨] 执行天气查询：{}", city);

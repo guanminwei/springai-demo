@@ -58,6 +58,14 @@ public class WeatherRecommendAgent {
     private final ChatClient chatClient;
     private final CompiledGraph<AgentState> graph;
 
+    /**
+     * 构造方法 - 初始化旅游推荐 Agent
+     * <p>
+     * 使用默认地点"北京"构建 StateGraph，并打印 PlantUML 流程图。
+     *
+     * @param chatClient 用于生成推荐内容的 ChatClient
+     * @throws GraphStateException 图构建异常
+     */
     public WeatherRecommendAgent(ChatClient chatClient) throws GraphStateException {
         this.chatClient = chatClient;
         this.graph = initGraph("北京");
@@ -152,6 +160,16 @@ public class WeatherRecommendAgent {
         return graph;
     }
 
+    /**
+     * 路由评估器 - 条件边决策逻辑
+     * <p>
+     * 根据当前 State 中的 weather 字段决定下一步走向：
+     * <ul>
+     *     <li>晴天 → "outdoor"（进入户外推荐节点）</li>
+     *     <li>雨天 → "indoor"（进入室内推荐节点）</li>
+     *     <li>其他天气 → END（直接结束工作流）</li>
+     * </ul>
+     */
     public static class RouteEvaluationResult implements AsyncEdgeAction<AgentState> {
         @Override
         public CompletableFuture<String> apply(AgentState agentState) {

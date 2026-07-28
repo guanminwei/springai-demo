@@ -16,11 +16,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 轻量级 ReAct Agent 实现
- * 核心原理：Thinking -> Act -> Observe 循环
+ * 轻量级 ReAct Agent 同步实现
+ * <p>
+ * 本类从零实现 ReAct（Reasoning + Acting）范式的智能体，不依赖任何 Agent 框架。
+ * 核心原理：通过循环执行 Thinking → Act → Observe 三个阶段，让大模型自主决策
+ * 是否需要调用工具，直到收集足够信息后给出最终答案。
+ * <p>
+ * 执行流程：
+ * <pre>
+ * 1. 用户提问 → 构建初始消息列表
+ * 2. Thinking  → 发送消息给大模型（含系统提示 + 工具描述）
+ * 3. 检查响应  → 是否包含工具调用？
+ *    ├─ 是 → Act: 执行工具调用 → Observe: 将结果加入消息列表 → 回到步骤 2
+ *    └─ 否 → 返回最终答案
+ * 4. 超过最大迭代次数 → 返回失败信息
+ * </pre>
+ * <p>
+ * 关键设计：
+ * <ul>
+ *     <li>禁用自动工具执行（internalToolExecutionEnabled=false），手动控制工具调用流程</li>
+ *     <li>每轮只处理一个工具调用（简化实现，避免多工具并发复杂性）</li>
+ *     <li>系统提示词明确要求"一次只调用一个工具"和"信息充足时直接回答"</li>
+ *     <li>最大迭代次数限制（MAX_ITERATIONS=10），防止死循环</li>
+ * </ul>
+ * <p>
+ * 与 StreamReActAgent 的区别：
+ * <ul>
+ *     <li>本类：使用同步 call() 方式，阻塞等待完整响应</li>
+ *     <li>StreamReActAgent：使用流式 stream() 方式，实时获取部分响应</li>
+ * </ul>
  *
  * @author YiHui
  * @date 2026/3/4
+ * @see StreamReActAgent
+ * @see CalculatorTools
  */
 public class SimpleReActAgent {
     private static final Logger log = LoggerFactory.getLogger(SimpleReActAgent.class);
@@ -31,6 +60,12 @@ public class SimpleReActAgent {
     private final ChatClient chatClient;
     private final List<ToolCallback> tools;
 
+    /**
+     * 构造方法
+     *
+     * @param chatClient 用于与大模型交互的 ChatClient
+     * @param tools      可供 Agent 调用的工具列表（可为 null）
+     */
     public SimpleReActAgent(ChatClient chatClient, List<ToolCallback> tools) {
         this.chatClient = chatClient;
         this.tools = tools != null ? tools : new ArrayList<>();

@@ -59,6 +59,14 @@ public class JsonUtil {
             throw new RuntimeException(e);
         }
     }
+    /**
+     * JSON 字符串转对象
+     *
+     * @param s     JSON 字符串
+     * @param clazz 目标类型
+     * @param <T>   泛型类型参数
+     * @return 反序列化后的对象
+     */
     public static <T> T toObj(String s, Class<T> clazz) {
         try {
             return mapper.readValue(s, clazz);

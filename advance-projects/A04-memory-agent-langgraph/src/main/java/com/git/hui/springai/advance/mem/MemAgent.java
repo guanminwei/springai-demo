@@ -43,10 +43,25 @@ public class MemAgent {
     private final StateGraph<AgentExecutor.State> graph;
     private final CompiledGraph<AgentExecutor.State> workflow;
 
+    /**
+     * 构造方法 - 使用默认 MemorySaver（内存级检查点）
+     *
+     * @param model 聊天模型
+     * @throws GraphStateException 图构建异常
+     */
     public MemAgent(ChatModel model) throws GraphStateException {
         this(model, new MemorySaver());
     }
 
+    /**
+     * 构造方法 - 使用自定义检查点保存器
+     * <p>
+     * 构建 AgentExecutor 状态图，并使用指定的 CheckpointSaver 编译为可执行工作流。
+     *
+     * @param model      聊天模型
+     * @param memorySaver 检查点保存器（如 MemorySaver、JdbcSaver 等）
+     * @throws GraphStateException 图构建异常
+     */
     public MemAgent(ChatModel model, BaseCheckpointSaver memorySaver) throws GraphStateException {
         this.graph = AgentExecutor.builder().chatModel(model).build();
         this.workflow = graph.compile(CompileConfig.builder().checkpointSaver(memorySaver).build());

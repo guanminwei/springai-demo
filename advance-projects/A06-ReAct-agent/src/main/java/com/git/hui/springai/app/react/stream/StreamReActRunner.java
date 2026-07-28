@@ -9,13 +9,36 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * 流式 ReAct Agent 演示应用
+ * 流式版 ReAct Agent 演示运行器
+ * <p>
+ * 本类实现 {@link CommandLineRunner}，在应用启动时自动运行流式 ReAct Agent 示例。
+ * 与 {@link com.git.hui.springai.app.react.simple.SimpleReActRunner} 类似，
+ * 但使用 {@link StreamReActAgent} 进行流式交互，可实时观察模型的推理过程。
+ * <p>
+ * 示例场景：
+ * <ul>
+ *     <li>示例 1：简单加法 - 单次工具调用</li>
+ *     <li>示例 2：多步计算 + 条件天气查询 - 多轮工具调用</li>
+ *     <li>示例 3：混合运算 - 连续多步计算</li>
+ *     <li>示例 4：复杂应用题 - 实际场景模拟</li>
+ * </ul>
+ * <p>
+ * 注意：本类默认被注释掉 @Component 注解，不会在启动时自动执行。
+ * 如需运行，请取消注释 @Component 或手动实例化调用。
+ *
+ * @see StreamReActAgent
+ * @see com.git.hui.springai.app.react.simple.SimpleReActRunner
  */
 //@Component
 public class StreamReActRunner implements CommandLineRunner {
 
     private final ChatClient chatClient;
 
+    /**
+     * 构造方法 - 通过 Builder 创建 ChatClient
+     *
+     * @param chatClientBuilder Spring 自动注入的 ChatClient.Builder
+     */
     public StreamReActRunner(ChatClient.Builder chatClientBuilder) {
         this.chatClient = chatClientBuilder.build();
     }

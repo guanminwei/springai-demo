@@ -19,11 +19,37 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 流式 ReAct Agent 实现
- * 核心原理：Thinking -> Act -> Observe 循环
- * 特点：使用 Stream 与大模型交互，实时获取响应
+ * <p>
+ * 本类是 {@link com.git.hui.springai.app.react.simple.SimpleReActAgent} 的流式版本，
+ * 使用 Flux 流式响应与大模型交互，可实时获取模型的思考过程和工具调用决策。
+ * <p>
+ * 与 SimpleReActAgent 的核心区别：
+ * <ul>
+ *     <li>SimpleReActAgent：使用 call() 同步调用，等待完整响应后处理</li>
+ *     <li>StreamReActAgent（本类）：使用 stream() 流式调用，通过 Flux 逐步接收响应片段</li>
+ * </ul>
+ * <p>
+ * 流式处理要点：
+ * <ul>
+ *     <li>使用 AtomicReference 保存最后一个 AssistantMessage（流式场景下需要聚合）</li>
+ *     <li>使用 StringBuilder 累积流式文本片段，最终构建完整的回复</li>
+ *     <li>通过 doOnNext + blockLast 阻塞等待流式响应完成</li>
+ *     <li>当检测到工具调用时，停止文本累积，进入 Act 阶段</li>
+ * </ul>
+ * <p>
+ * 执行流程（与 SimpleReActAgent 一致）：
+ * <pre>
+ * 1. 用户提问 → 构建初始消息列表
+ * 2. Thinking  → 流式发送给大模型
+ * 3. 检查响应  → 是否包含工具调用？
+ *    ├─ 是 → Act: 执行工具 → Observe: 结果加入历史 → 回到步骤 2
+ *    └─ 否 → 返回聚合后的最终答案
+ * </pre>
  *
  * @author YiHui
  * @date 2026/3/4
+ * @see com.git.hui.springai.app.react.simple.SimpleReActAgent
+ * @see CalculatorTools
  */
 public class StreamReActAgent {
     private static final Logger log = LoggerFactory.getLogger(StreamReActAgent.class);
@@ -34,6 +60,12 @@ public class StreamReActAgent {
     private final ChatClient chatClient;
     private final List<ToolCallback> tools;
 
+    /**
+     * 构造方法
+     *
+     * @param chatClient 用于与大模型交互的 ChatClient
+     * @param tools      可供 Agent 调用的工具列表（可为 null）
+     */
     public StreamReActAgent(ChatClient chatClient, List<ToolCallback> tools) {
         this.chatClient = chatClient;
         this.tools = tools != null ? tools : new ArrayList<>();

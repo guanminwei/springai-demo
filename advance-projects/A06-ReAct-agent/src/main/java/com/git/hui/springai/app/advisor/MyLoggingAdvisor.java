@@ -56,6 +56,13 @@ public class MyLoggingAdvisor implements BaseAdvisor {
 
     public final boolean showAvailableTools;
 
+    /**
+     * 私有构造方法 - 通过 Builder 模式创建实例
+     *
+     * @param order              Advisor 执行顺序（值越小越先执行）
+     * @param showSystemMessage  是否在日志中显示系统提示词
+     * @param showAvailableTools 是否在日志中显示可用工具列表
+     */
     private MyLoggingAdvisor(int order, boolean showSystemMessage, boolean showAvailableTools) {
         this.order = order;
         this.showSystemMessage = showSystemMessage;
@@ -67,6 +74,16 @@ public class MyLoggingAdvisor implements BaseAdvisor {
         return this.order;
     }
 
+    /**
+     * 请求拦截 - 在 LLM 调用前记录请求上下文
+     * <p>
+     * 记录内容包括：系统提示词、可用工具列表、最后一条用户消息或工具响应。
+     * 对于 ToolResponseMessage，会记录每个工具调用的名称和返回数据。
+     *
+     * @param chatClientRequest 请求对象
+     * @param advisorChain      Advisor 链
+     * @return 原始请求（不做修改，仅记录日志）
+     */
     @Override
     public ChatClientRequest before(ChatClientRequest chatClientRequest, AdvisorChain advisorChain) {
         StringBuilder sb = new StringBuilder("\n[log] USER INPUT⬇️：");
@@ -114,6 +131,16 @@ public class MyLoggingAdvisor implements BaseAdvisor {
         return chatClientRequest;
     }
 
+    /**
+     * 响应拦截 - 在 LLM 返回后记录响应内容
+     * <p>
+     * 记录内容包括：模型的工具调用（Tool-Call）名称和参数、文本回复内容。
+     * 在 ReAct 循环中，可以观察到每轮模型是决定调用工具还是给出最终答案。
+     *
+     * @param chatClientResponse 响应对象
+     * @param advisorChain       Advisor 链
+     * @return 原始响应（不做修改，仅记录日志）
+     */
     @Override
     public ChatClientResponse after(ChatClientResponse chatClientResponse, AdvisorChain advisorChain) {
         StringBuilder sb = new StringBuilder("\nASSISTANT: ");
@@ -147,6 +174,13 @@ public class MyLoggingAdvisor implements BaseAdvisor {
         return chatClientResponse;
     }
 
+    /**
+     * 截取文本前 N 个字符，超出部分用 "..." 代替
+     *
+     * @param text 原始文本
+     * @param n    最大保留长度
+     * @return 截断后的文本
+     */
     private String first(String text, int n) {
         if (text.length() <= n) {
             return text;
