@@ -1,8 +1,8 @@
 ﻿spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/ai-oc-my?useUnicode=true&allowPublicKeyRetrieval=true&autoReconnect=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password:
+    url: jdbc:mysql://223.223.223.175:3307/ai-oc-my?useUnicode=true&allowPublicKeyRetrieval=true&autoReconnect=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: dbadmin
+    password: dz@db123
   ai:
     chat:
       memory:

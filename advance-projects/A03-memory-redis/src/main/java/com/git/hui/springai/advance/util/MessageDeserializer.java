@@ -1,18 +1,20 @@
 package com.git.hui.springai.advance.util;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 
 import java.io.IOException;
+import java.util.EnumMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -43,52 +45,90 @@ import java.util.function.Function;
 public class MessageDeserializer extends JsonDeserializer<Message> {
     private static final Logger logger = LoggerFactory.getLogger(MessageDeserializer.class);
 
-    private final Map<String, Function<String, Message>> msgFactor = Map.of(
-            "USER", UserMessage::new,
-            "SYSTEM", UserMessage::new,
-            "ASSISTANT", UserMessage::new
-    );
+    // 消息类型枚举
+    public enum MessageType {
+        USER, SYSTEM, ASSISTANT
+    }
+
+    // 工厂映射，支持后续添加新类型
+    private final Map<MessageType, Function<String, Message>> factoryMap = new EnumMap<>(MessageType.class);
+
+    public MessageDeserializer() {
+        // 注册默认类型（可改为注入或外部配置）
+        factoryMap.put(MessageType.USER, UserMessage::new);
+        factoryMap.put(MessageType.SYSTEM, SystemMessage::new);
+        factoryMap.put(MessageType.ASSISTANT, AssistantMessage::new);
+        // 还可添加其它类型...
+    }
 
     @Override
-    public Message deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    public Message deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         JsonNode node = p.getCodec().readTree(p);
-        // If node is plain text, create a UserMessage by default
+
+        // 1. 纯文本 → UserMessage
         if (node.isTextual()) {
             return new UserMessage(node.asText());
         }
 
-        // Extract message type
-        String type = extractMessageType(node);
+        // 2. 非对象结构 → 报错
+        if (!node.isObject()) {
+            throw new InvalidFormatException(p, "Expected JSON Object or Text, got " + node.getNodeType(), node, Message.class);
+        }
 
-        // Extract content
-        String content = extractContent(node);
+        // 3. 提取类型和内容（可配置字段名）
+        String typeStr = extractField(node, "messageType");
+        String content = extractField(node, "text");
 
-        // Create corresponding message object based on type
-        return Optional.ofNullable(type).map(String::toUpperCase).map(msgFactor::get).orElseGet(() -> {
-            if (type == null) {
-                logger.warn("Message type not found, defaulting to USER");
-            } else {
-                logger.warn("Unknown message type: {}, defaulting to USER", type);
-            }
-            return msgFactor.get("USER");
-        }).apply(content);
+        // 若内容缺失，可降级为使用整个节点的字符串表示（但可能不精确，此处选择使用空字符串）
+        if (content == null) {
+            logger.warn("Message content field 'text' missing, using empty string");
+            content = "";
+        }
+
+        // 4. 解析类型并获取工厂
+        MessageType messageType = resolveMessageType(typeStr);
+        Function<String, Message> factory = factoryMap.get(messageType);
+        if (factory == null) {
+            // 理论上不会发生，因为 resolveMessageType 已保证非 null
+            throw new IllegalStateException("No factory registered for " + messageType);
+        }
+
+        return factory.apply(content);
     }
 
     /**
-     * 获取消息类型
+     * 从节点中提取字段值，若字段不存在或为空节点则返回 null
      */
-    private String extractMessageType(JsonNode node) {
-        return Optional.ofNullable(node.get("messageType"))
-                .map(JsonNode::asText)
-                .orElse(null);
+    private String extractField(JsonNode node, String fieldName) {
+        JsonNode fieldNode = node.get(fieldName);
+        if (fieldNode == null || fieldNode.isNull()) {
+            return null;
+        }
+        if (!fieldNode.isTextual()) {
+            logger.warn("Field '{}' is not textual, converting to string", fieldName);
+            return fieldNode.toString();
+        }
+        return fieldNode.asText();
     }
 
     /**
-     * 获取消息内容
+     * 解析类型字符串，未知类型降级为 USER 并记录警告
      */
-    private String extractContent(JsonNode node) {
-        return Optional.ofNullable(node.get("text"))
-                .map(JsonNode::asText)
-                .orElseGet(node::toString);
+    private MessageType resolveMessageType(String typeStr) {
+        if (typeStr == null) {
+            logger.warn("Message type missing, defaulting to USER");
+            return MessageType.USER;
+        }
+        try {
+            return MessageType.valueOf(typeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            logger.warn("Unknown message type '{}', defaulting to USER", typeStr);
+            return MessageType.USER;
+        }
+    }
+
+    // 若需支持动态注册新类型，可提供注册方法
+    public void registerFactory(MessageType type, Function<String, Message> factory) {
+        factoryMap.put(type, factory);
     }
 }

@@ -19,6 +19,7 @@
         <module>A04-memory-agent-langgraph</module>
         <module>A05-agent-langgraph-simple</module>
         <module>A06-ReAct-agent</module>
+        <module>A07-agent-memory-system</module>
     </modules>
 
     <properties>

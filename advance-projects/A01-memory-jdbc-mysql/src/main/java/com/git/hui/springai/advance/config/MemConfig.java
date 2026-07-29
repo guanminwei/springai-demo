@@ -40,6 +40,20 @@ public class MemConfig {
      *
      * @param chatMemoryRepository Spring AI 自动配置的 JDBC 对话记忆仓库（MySQL 方言）
      * @return 基于消息窗口的 ChatMemory 实例
+     * 
+     * 
+classpath 有 spring-ai-starter-model-chat-memory-repository-jdbc
+        ↓
+Spring AI AutoConfiguration 触发
+        ↓
+检测到 DataSource URL = jdbc:mysql://...  →  选择 MySQL Dialect
+        ↓
+自动创建 JdbcChatMemoryRepository Bean（MySQL 方言）
+        ↓
+MemConfig 注入它 → 包装为 MessageWindowChatMemory（ChatMemory）
+        ↓
+ChatController 注入 ChatMemory → 对话记忆读写都走 MySQL
+     * 
      */
     @Bean
     public ChatMemory jdbcChatMemory(ChatMemoryRepository chatMemoryRepository) {

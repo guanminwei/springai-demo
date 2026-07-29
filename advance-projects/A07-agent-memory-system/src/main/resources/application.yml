@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    # H2 文件模式：重启不丢失，零外部依赖
+    url: jdbc:h2:file:${user.dir}/advance-projects/A07-agent-memory-system/datas/agent-memory-db;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  ai:
+    zhipuai:
+      api-key: ${ZHIPUAI_API_KEY:${AI_API_KEY:}}
+      chat:
+        options:
+          model: GLM-4.7-Flash
+
+# 记忆系统配置
+app:
+  memory:
+    # 衰减阈值（天）
+    archive-after-days: 90
+    demote-after-days: 30
+    archive-min-access: 2
+    demote-min-access: 5
+    # 衰减系数
+    demote-factor: 0.8
+    # 检索参数
+    retrieval-max-candidates: 20
+    retrieval-top-n: 5
+    # 定时任务开关
+    scheduled-enabled: true
+
+server:
+  port: 8087

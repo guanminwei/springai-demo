@@ -12,6 +12,13 @@ spring:
       port: 6379
       password:
 
+# 对话记忆配置
+app:
+  chat-memory:
+    redis:
+      # 会话 key 过期时间，支持 Spring Duration 格式（如 24h、30m、7d）；设为 0 表示不过期
+      ttl: 24h
+
 # 修改日志级别
 logging:
   level:
